@@ -1,0 +1,16 @@
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\appsettings.Development.json
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\appsettings.json
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\Properties\launchSettings.json
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\Api.deps.json
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\Api.runtimeconfig.json
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\Api.runtimeconfig.dev.json
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\Api.dll
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\bin\Debug\netcoreapp2.1\Api.pdb
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.csprojAssemblyReference.cache
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.RazorAssemblyInfo.cache
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.RazorAssemblyInfo.cs
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.AssemblyInfoInputs.cache
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.AssemblyInfo.cs
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.RazorTargetAssemblyInfo.cache
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.dll
+D:\Kafka\dotnetcore-kafka-integration-master\dotnetcore-kafka-integration-master\Api\obj\Debug\netcoreapp2.1\Api.pdb
