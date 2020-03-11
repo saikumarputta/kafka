@@ -1,77 +1,170 @@
-# Building realtime streaming applications using .NET Core and KAFKA
+![media/Horse-and-Rider-1909-1910-.jpg](media/Horse-and-Rider-1909-1910-.jpg)
+> *Horse and Rider 1909-1910 - Franz Kafka*
+
+# 🥞 kafka-waffle-stack
+Kafka stack with zookeeper, schema-registry, kafka-rest-proxy, kafka-connect, kafka-connect-ui, zoonavigator-web &amp; zoonavigator-api
 
 
-### User Scenario:
+## 🚂 What toys will you have?
+
+- kafka
+  * kafka-connect
+  * kafka-connect-ui
+  * kafka-topics-ui
+  * kafka-rest-proxy
+
+- zookeeper
+  * zoonavigator-api
+  * zoonavigator-web
+
+- schema-registry
+  * schema-registry-ui
+
+- ksql
+
+## 🖥 Nice UIs to play with
+
+- Kafka topics UI
+http://localhost:8000
+
+- Schema registry UI
+http://localhost:8001
+
+- Kafka connect UI
+http://localhost:8002
+
+- Zoonavigator web
+http://localhost:8003
 
 
-Let's take a simple use case of e-commerce company. Assume we are building a simple "Order management" APIs to sell products like "Unicorn Whistles".
+## 🔧 Installation
 
- Our objective here is to build a fast & scalable backend APIs to take more order requests and quickly process or trigger other workflows to speedup the delivery process.
+0. ⭐️ Star the repo 😛
+1. 📦 Install Docker - [instructions](https://docs.docker.com/install)
+2. 🐑 Clone this repo
+3. ⌨️ Run `docker-compose up`
+4. ⏱ Wait... 😅
+5. 🕹 Play and have fun
 
- To address scaling individual apps and other performance related key metrics, lets assume that we have decided to build the below two critical components
-  - An Order API(RESTful) that takes users orders and responds back immediately with some acknowledgement info.
-  - A background service that actually process these order requests.
+## Posting a message to kafka through kafka-rest-proxy
 
-### Archgitecutre diagram:
-![architecture diagram](https://raw.githubusercontent.com/srigumm/dotnetcore-kafka-integration/master/Api/Images/architecture.png)
+```sh
+curl -X POST -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "http://localhost:8082/topics/jsontest"
+```
 
-### Prerequisites:
+> 📝 You can import 👆 into Postman to play with the values. `Import > plain text`
 
- - VSCODE or some .net code editor
- - .NET Core 2.1
- - Docker
- - KAFKA Installation and Topics setup
- - Kafkacat command line tool
- - If you are connecting to Kerberos-aware KAFKA Enterprise Instance, ensure the below things:
-    - Setup krb5.Conf file  with your organization's KDC details.
-    - Keep krb5.conf file in default path i.e /etc/ or specify the path with KRB5_CONFIG environment variable.
-    - Create Keytab file with your principal
-    - Make sure your/service account has atleast read access to krb5.conf file.
+## Generating data into the kafka cluster
+### simulate "user" data
+```sh
+docker run --network kafka-waffle-stack_default --rm --name datagen-users \
+    confluentinc/ksql-examples:5.0.0 \
+    ksql-datagen \
+        bootstrap-server=kafka:9092 \
+        quickstart=users \
+        format=json \
+        topic=users \
+        maxInterval=100
+```
 
-### How to install KAFKA in local??
-- It's easy to setup KAFKA in local using docker containers.
-  Clone the below below repository and run "docker-compose up" command.
-        commands:
+### simulate "pageview" data
+```sh
+docker run --network kafka-waffle-stack_default --rm --name datagen-pageviews \
+    confluentinc/ksql-examples:5.0.0 \
+    ksql-datagen \
+        bootstrap-server=kafka:9092 \
+        quickstart=pageviews \
+        format=delimited \
+        topic=pageviews \
+        maxInterval=500
+```
 
-             git clone https://github.com/TribalScale/kafka-waffle-stack.git
-             cd kafaka-waffle-stack
-             docker-compose up
-   Above instructions should start a KAFKA server, and you can use the broker localhost:9092 to produce/consumer messages.
-- Creating a new topic in local KAFKA:
-    producing a sample message to a topic using kafkacat utility would create topic if it doesn't exist.
-    so, run the below command and give some sample message like {"id":1234,"productname":"Unicorn Whistles","quantity":3}
+## Connecting a ksql cli instance to ksql-server
+```sh
+docker run --network=kafka-waffle-stack_default -it confluentinc/cp-ksql-cli:5.0.0 http://ksql-server:8088
+```
 
-       kafkacat -b localhost:9092 -t new_topic -P
+### Playing around with ksql
+1. Run the "user" and "pageview" data generators
+2. Run a ksql cli container connected to the ksql-server
+3. Create a ksql stream: `CREATE STREAM pageviews_original (viewtime bigint, userid varchar, pageid varchar) WITH (kafka_topic='pageviews', value_format='DELIMITED');`
+4. Create a ksql table: `CREATE TABLE users_original (registertime BIGINT, gender VARCHAR, regionid VARCHAR, userid VARCHAR) WITH (kafka_topic='users', value_format='JSON', key = 'userid');`
+5. Run a one-off query to select data from a stream: `SELECT pageid FROM pageviews_original LIMIT 3;`
+6. Create a persistent query that joins two topics together and writes to another topic:
+```
+      CREATE STREAM pageviews_enriched AS \
+      SELECT users_original.userid AS userid, pageid, regionid, gender \
+      FROM pageviews_original \
+      LEFT JOIN users_original \
+        ON pageviews_original.userid = users_original.userid;
+```
+7. View the results as they come in (CTRL+c to cancel, note that this does not end the underlying query): `SELECT * FROM pageviews_enriched;`
 
-### Implementation:
+Check out [the source documentation](https://docs.confluent.io/current/ksql/docs/tutorials/basics-docker.html#ksql-quickstart-docker) for more fun examples!
 
-- Implemented a dotnetcore-WebApi post handler to capture user's order requests.( into "orderrequests" kafka topic)
-- Implemented a background service(HostedService in .NET core) that process the user's order requests in the "orderrequests" kafka topic and writes to "readytoship" kafka topic.
 
-### Run & Test:
-1. Clone this repository:
+## 🔍 Want to take a 👀 inside the machines?
 
-       git clone https://github.com/srigumm/dotnetcore-kafka-integration.git
-       cd dotnetcore-kafka-integration
-2. Run the below commands at the root of your project folder.
+```sh
+docker-compose exec <name-of-the-container> /bin/bash
+```
 
-       dotnet restore
-       dotnet build
-       dotnet run"
+**For example**
 
-      This should start both webserver for our webapi rest service and  our background service(hosted inside the same webhost).
+```sh
+docker-compose exec kafka /bin/bash
+```
 
-        WebApi URL: http://localhost:5000/api/order
+```sh
+docker-compose exec kafka /bin/bash
+root@kafka:/# ls
+bin  boot  dev	etc  home  lib	lib64  media  mnt  opt	proc  root  run  sbin  srv  sys  tmp  usr  var
+root@kafka:/# cd var/lib/kafka/data/
+root@kafka:/var/lib/kafka/data# ls
+__confluent.support.metrics-0  __consumer_offsets-2   __consumer_offsets-31  __consumer_offsets-43  cleaner-offset-checkpoint  docker-connect-offsets-19  docker-connect-offsets-9
+__consumer_offsets-0	       __consumer_offsets-20  __consumer_offsets-32  __consumer_offsets-44  docker-connect-configs-0   docker-connect-offsets-2   docker-connect-status-0
+__consumer_offsets-1	       __consumer_offsets-21  __consumer_offsets-33  __consumer_offsets-45  docker-connect-offsets-0   docker-connect-offsets-20  docker-connect-status-1
+__consumer_offsets-10	       __consumer_offsets-22  __consumer_offsets-34  __consumer_offsets-46  docker-connect-offsets-1   docker-connect-offsets-21  docker-connect-status-2
+__consumer_offsets-11	       __consumer_offsets-23  __consumer_offsets-35  __consumer_offsets-47  docker-connect-offsets-10  docker-connect-offsets-22  docker-connect-status-3
+__consumer_offsets-12	       __consumer_offsets-24  __consumer_offsets-36  __consumer_offsets-48  docker-connect-offsets-11  docker-connect-offsets-23  docker-connect-status-4
+__consumer_offsets-13	       __consumer_offsets-25  __consumer_offsets-37  __consumer_offsets-49  docker-connect-offsets-12  docker-connect-offsets-24  log-start-offset-checkpoint
+__consumer_offsets-14	       __consumer_offsets-26  __consumer_offsets-38  __consumer_offsets-5   docker-connect-offsets-13  docker-connect-offsets-3   meta.properties
+__consumer_offsets-15	       __consumer_offsets-27  __consumer_offsets-39  __consumer_offsets-6   docker-connect-offsets-14  docker-connect-offsets-4   recovery-point-offset-checkpoint
+__consumer_offsets-16	       __consumer_offsets-28  __consumer_offsets-4   __consumer_offsets-7   docker-connect-offsets-15  docker-connect-offsets-5   replication-offset-checkpoint
+__consumer_offsets-17	       __consumer_offsets-29  __consumer_offsets-40  __consumer_offsets-8   docker-connect-offsets-16  docker-connect-offsets-6
+__consumer_offsets-18	       __consumer_offsets-3   __consumer_offsets-41  __consumer_offsets-9   docker-connect-offsets-17  docker-connect-offsets-7
+__consumer_offsets-19	       __consumer_offsets-30  __consumer_offsets-42  _schemas-0		    docker-connect-offsets-18  docker-connect-offsets-8
+```
 
-3. Use postman to trigger "POST" calls to issue new order requests:
-         http://localhost:5000/api/order
+## 💾  Volumes
 
-4. Verify if new messages were written to readytoship topic using kafkacat utility:
+The following volumes will be created inside the `./volumes` folder:
 
-       kafkacat -b localhost:9092 -t readytoship -C
+ - 📁 `./volumes/kafka`
+ - 📁 `./volumes/zookeeper`
 
-### Troubleshooting tips:
-- If your producer/consumer is not responding at all, then verify your keytab file with below steps
 
-      kinit username@MYDOMAIN.COM -k -t username.keytab
-    you should get authenticated successfully (without being prompted for a password).
+## Q&A
+### ⚠️ Issues login into Zoonavigator?
+
+When you visit Zoonavigator (http://localhost:8003) the first time, you will be prompted to enter the following details 👇
+
+**Connection string:** `zookeeper:2181`
+**no user / no password** just click Connect
+
+### ⚠️ Unable to connect your application to Kafka broker?
+
+You may need to add the following line to `/etc/hosts`, `C:\Windows\system32\drivers\etc\hosts`, etc:
+
+`127.0.0.1 kafka`
+
+
+## 💡 Ideas
+
+- Use hotel for a nice UI
+- kafka-stack cli that starts a UI with all the links
+
+
+## 🙏 Thanks & Credits
+
+- Illustration - [The art of Franz Kafka - The Drawings (1907-1917) OpenCulture](http://www.openculture.com/2014/02/the-art-of-franz-kafka-drawings-from-1907-1917.html)
